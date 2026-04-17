@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SecureFMS – Secure File Management</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #161b22; --bg3: #21262d;
+    --border: #30363d; --border2: #484f58;
+    --text: #e6edf3; --text2: #8b949e; --text3: #6e7681;
+    --blue: #388bfd; --blue2: #1f6feb; --bluebg: #0d1b2a;
+    --green: #3fb950; --greenbg: #0d2015;
+    --red: #f85149; --redbg: #2d1315;
+    --amber: #d29922; --amberbg: #271d0a;
+    --purple: #a371f7; --purplebg: #1e1533;
+    --radius: 8px; --radius2: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg2); } ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  input, select, textarea { background: var(--bg2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); padding: 8px 12px; font-size: 14px; outline: none; transition: border-color .2s; width: 100%; }
+  input:focus, select:focus { border-color: var(--blue); }
+  button { cursor: pointer; border: none; border-radius: var(--radius); font-size: 14px; padding: 8px 16px; transition: all .15s; }
+  .btn-primary { background: var(--blue2); color: #fff; } .btn-primary:hover { background: var(--blue); }
+  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); } .btn-secondary:hover { border-color: var(--border2); }
+  .btn-danger { background: var(--redbg); color: var(--red); border: 1px solid var(--red); } .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-success { background: var(--greenbg); color: var(--green); border: 1px solid var(--green); }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); padding: 20px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+  .badge-blue { background: var(--bluebg); color: var(--blue); }
+  .badge-green { background: var(--greenbg); color: var(--green); }
+  .badge-red { background: var(--redbg); color: var(--red); }
+  .badge-amber { background: var(--amberbg); color: var(--amber); }
+  .badge-purple { background: var(--purplebg); color: var(--purple); }
+  .tag-admin { background: var(--purplebg); color: var(--purple); }
+  .tag-editor { background: var(--bluebg); color: var(--blue); }
+  .tag-viewer { background: var(--bg3); color: var(--text2); }
+  .alert { padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin: 10px 0; }
+  .alert-error { background: var(--redbg); border: 1px solid var(--red); color: var(--red); }
+  .alert-success { background: var(--greenbg); border: 1px solid var(--green); color: var(--green); }
+  .alert-info { background: var(--bluebg); border: 1px solid var(--blue2); color: var(--blue); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; color: var(--text2); font-weight: 500; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+  .nav { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; gap: 0; height: 52px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-weight: 700; font-size: 16px; color: var(--text); margin-right: 32px; display: flex; align-items: center; gap: 8px; }
+  .nav-logo span { color: var(--blue); }
+  .nav-tab { padding: 0 14px; height: 52px; display: flex; align-items: center; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; font-size: 13px; }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--text); border-bottom-color: var(--blue); }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .sidebar { width: 220px; min-height: calc(100vh - 52px); background: var(--bg2); border-right: 1px solid var(--border); padding: 16px 0; position: fixed; top: 52px; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 8px 20px; cursor: pointer; color: var(--text2); transition: all .15s; font-size: 13px; }
+  .sidebar-item:hover, .sidebar-item.active { color: var(--text); background: var(--bg3); }
+  .sidebar-item .icon { width: 16px; text-align: center; }
+  .main { margin-left: 220px; padding: 28px; min-height: calc(100vh - 52px); }
+  .page-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); padding: 16px 20px; }
+  .stat-val { font-size: 28px; font-weight: 700; margin: 4px 0; }
+  .stat-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; z-index: 999; }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); padding: 24px; width: 440px; max-width: 94vw; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: .4px; }
+  .drop-zone { border: 2px dashed var(--border); border-radius: var(--radius2); padding: 32px; text-align: center; cursor: pointer; transition: all .2s; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--blue); background: var(--bluebg); }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .severity-critical { color: var(--red); }
+  .severity-high { color: var(--amber); }
+  .severity-medium { color: var(--blue); }
+  .severity-low { color: var(--text2); }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text2); }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .search-bar input { max-width: 320px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; padding: 16px; } .grid4 { grid-template-columns: 1fr 1fr; } .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const API = 'http://localhost:8000';
+
+// ── Helpers ──────────────────────────────────────────────────────
+function api(path, opts = {}) {
+  const token = localStorage.getItem('token');
+  const headers = { ...(opts.headers || {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  if (!(opts.body instanceof FormData)) headers['Content-Type'] = 'application/json';
+  return fetch(API + path, { ...opts, headers }).then(async r => {
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || `Error ${r.status}`);
+    return data;
+  });
+}
+
+function fmt(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1048576).toFixed(1) + ' MB';
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString();
+}
+
+function Badge({ children, type }) {
+  return <span className={`badge badge-${type || 'blue'}`}>{children}</span>;
+}
+
+function Alert({ msg, type }) {
+  if (!msg) return null;
+  return <div className={`alert alert-${type || 'error'}`}>{msg}</div>;
+}
+
+function Spinner() { return <span className="spinner" />; }
+
+// ── Login / Register ────────────────────────────────────────────
+function AuthPage({ onLogin }) {
+  const [tab, setTab] = React.useState('login');
+  const [form, setForm] = React.useState({ username: '', password: '', email: '', role: 'viewer', totp_code: '' });
+  const [loading, setLoading] = React.useState(false);
+  const [err, setErr] = React.useState('');
+  const [need2FA, setNeed2FA] = React.useState(false);
+
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  async function submit() {
+    setErr(''); setLoading(true);
+    try {
+      if (tab === 'register') {
+        await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ username: form.username, email: form.email, password: form.password, role: form.role }) });
+        setTab('login'); setErr('');
+        alert('Registered! Please log in.');
+      } else {
+        const res = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: form.username, password: form.password, totp_code: form.totp_code || undefined }) });
+        if (res.require_2fa) { setNeed2FA(true); setLoading(false); return; }
+        localStorage.setItem('token', res.access_token);
+        onLogin({ username: res.username, role: res.role });
+      }
+    } catch (e) { setErr(e.message); }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div style={{ width: 380 }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-1px' }}>🔒 Secure<span style={{ color: 'var(--blue)' }}>FMS</span></div>
+          <div style={{ color: 'var(--text2)', fontSize: 13, marginTop: 6 }}>Secure File Management System</div>
+        </div>
+        <div className="card">
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            {['login','register'].map(t => (
+              <button key={t} className={tab===t ? 'btn-primary' : 'btn-secondary'} style={{ flex: 1 }} onClick={() => { setTab(t); setErr(''); setNeed2FA(false); }}>{t === 'login' ? 'Sign In' : 'Register'}</button>
+            ))}
+          </div>
+          <Alert msg={err} />
+          {tab === 'register' && (
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} />
+            </div>
+          )}
+          <div className="form-group">
+            <label className="form-label">Username</label>
+            <input placeholder="Username" value={form.username} onChange={set('username')} onKeyDown={e => e.key==='Enter' && submit()} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input type="password" placeholder="Password" value={form.password} onChange={set('password')} onKeyDown={e => e.key==='Enter' && submit()} />
+          </div>
+          {tab === 'register' && (
+            <div className="form-group">
+              <label className="form-label">Role</label>
+              <select value={form.role} onChange={set('role')}>
+                <option value="viewer">Viewer (read-only)</option>
+                <option value="editor">Editor (read + upload)</option>
+                <option value="admin">Admin (full access)</option>
+              </select>
+            </div>
+          )}
+          {(tab === 'login' && need2FA) && (
+            <div className="form-group">
+              <label className="form-label">🔐 2FA Code</label>
+              <input placeholder="6-digit code" value={form.totp_code} onChange={set('totp_code')} maxLength={6} />
+            </div>
+          )}
+          <button className="btn-primary" style={{ width: '100%', marginTop: 8, padding: '10px' }} onClick={submit} disabled={loading}>
+            {loading ? <Spinner /> : (tab === 'login' ? 'Sign In' : 'Create Account')}
+          </button>
+          {tab === 'login' && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 12, textAlign: 'center' }}>Default admin: <code>admin / Admin@12345</code></div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Files Page ──────────────────────────────────────────────────
+function FilesPage({ user }) {
+  const [files, setFiles] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [err, setErr] = React.useState('');
+  const [msg, setMsg] = React.useState('');
+  const [search, setSearch] = React.useState('');
+  const [uploadModal, setUploadModal] = React.useState(false);
+  const [metaModal, setMetaModal] = React.useState(null);
+  const [shareModal, setShareModal] = React.useState(null);
+  const [shareResult, setShareResult] = React.useState('');
+  const [dragOver, setDragOver] = React.useState(false);
+  const [uploading, setUploading] = React.useState(false);
+  const [uploadErr, setUploadErr] = React.useState('');
+  const fileRef = React.useRef();
+
+  const load = async () => {
+    try { const r = await api('/api/files/list'); setFiles(r); }
+    catch (e) { setErr(e.message); }
+    setLoading(false);
+  };
+  React.useEffect(() => { load(); }, []);
+
+  async function doUpload(file) {
+    if (!file) return;
+    setUploading(true); setUploadErr('');
+    try {
+      const fd = new FormData(); fd.append('file', file);
+      await api('/api/files/upload', { method: 'POST', body: fd, headers: {} });
+      setMsg(`✅ "${file.name}" uploaded successfully`);
+      setUploadModal(false);
+      await load();
+    } catch (e) { setUploadErr(e.message); }
+    setUploading(false);
+  }
+
+  async function doDelete(id, name) {
+    if (!confirm(`Delete "${name}"?`)) return;
+    try { await api(`/api/files/${id}`, { method: 'DELETE' }); setMsg('File deleted'); await load(); }
+    catch (e) { setErr(e.message); }
+  }
+
+  async function doShare(id) {
+    try {
+      const r = await api(`/api/files/share/${id}`, { method: 'POST', body: JSON.stringify({ expires_hours: 24 }) });
+      setShareResult(`${API}/api/files/shared/${r.share_token}`);
+      setShareModal(id);
+    } catch (e) { setErr(e.message); }
+  }
+
+  async function loadMeta(id) {
+    try { const r = await api(`/api/files/metadata/${id}`); setMetaModal(r); }
+    catch (e) { setErr(e.message); }
+  }
+
+  const filtered = files.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div>
+      <div className="page-title">📁 My Files <Badge type="blue">{files.length} files</Badge></div>
+      {err && <Alert msg={err} />}
+      {msg && <Alert msg={msg} type="success" />}
+      <div className="search-bar">
+        <input placeholder="🔍 Search files..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 280 }} />
+        {(user.role === 'admin' || user.role === 'editor') && (
+          <button className="btn-primary" onClick={() => setUploadModal(true)}>⬆ Upload File</button>
+        )}
+      </div>
+      {loading ? <div style={{ textAlign: 'center', padding: 48 }}><Spinner /></div> :
+        filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📂</div>
+            <div>No files found</div>
+            <div style={{ fontSize: 12, marginTop: 6, color: 'var(--text3)' }}>Upload a file to get started</div>
+          </div>
+        ) : (
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <table>
+              <thead><tr>
+                <th>Name</th><th>Size</th><th>Type</th><th>Uploaded</th><th>Actions</th>
+              </tr></thead>
+              <tbody>
+                {filtered.map(f => (
+                  <tr key={f.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>{f.mime?.startsWith('image') ? '🖼' : f.mime?.includes('pdf') ? '📄' : f.mime?.includes('text') ? '📝' : '📦'}</span>
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{f.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)' }}>{f.is_owner ? '👤 Owner' : '🔗 Shared'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ color: 'var(--text2)' }}>{fmt(f.size)}</td>
+                    <td><span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text2)' }}>{f.mime?.split('/')[1] || '—'}</span></td>
+                    <td style={{ color: 'var(--text2)', fontSize: 12 }}>{fmtDate(f.created_at)}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => window.open(`${API}/api/files/download/${f.id}?token=${localStorage.getItem('token')}`)}>⬇ Download</button>
+                        <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => loadMeta(f.id)}>ℹ Meta</button>
+                        {f.is_owner && <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => doShare(f.id)}>🔗 Share</button>}
+                        {(f.is_owner || user.role === 'admin') && <button className="btn-danger" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => doDelete(f.id, f.name)}>🗑</button>}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+
+      {/* Upload Modal */}
+      {uploadModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setUploadModal(false)}>
+          <div className="modal">
+            <div className="modal-title">Upload File <button className="btn-secondary" style={{ padding: '2px 8px' }} onClick={() => setUploadModal(false)}>✕</button></div>
+            <Alert msg={uploadErr} />
+            <div
+              className={`drop-zone ${dragOver ? 'drag-over' : ''}`}
+              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={e => { e.preventDefault(); setDragOver(false); doUpload(e.dataTransfer.files[0]); }}
+              onClick={() => fileRef.current.click()}
+            >
+              {uploading ? <><Spinner /> <div style={{ marginTop: 8 }}>Scanning & encrypting...</div></> : <>
+                <div style={{ fontSize: 32 }}>📁</div>
+                <div style={{ marginTop: 8, fontWeight: 500 }}>Drop a file here or click to browse</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>Max 10 MB · Text, images, PDF, ZIP</div>
+              </>}
+            </div>
+            <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={e => doUpload(e.target.files[0])} />
+          </div>
+        </div>
+      )}
+
+      {/* Metadata Modal */}
+      {metaModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setMetaModal(null)}>
+          <div className="modal">
+            <div className="modal-title">📋 File Metadata <button className="btn-secondary" style={{ padding: '2px 8px' }} onClick={() => setMetaModal(null)}>✕</button></div>
+            {[
+              ['Name', metaModal.original_name], ['Type', metaModal.mime_type],
+              ['Size', fmt(metaModal.size_bytes)], ['Owner', metaModal.owner_id],
+              ['Created', fmtDate(metaModal.created_at)], ['Modified', fmtDate(metaModal.updated_at)],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                <span style={{ color: 'var(--text2)' }}>{k}</span>
+                <span style={{ fontFamily: k === 'Owner' ? 'monospace' : 'inherit', fontSize: k === 'Owner' ? 11 : 13 }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 10 }}>
+              <div style={{ color: 'var(--text2)', fontSize: 12, marginBottom: 4 }}>SHA-256 (integrity)</div>
+              <code style={{ fontSize: 11, wordBreak: 'break-all', color: 'var(--green)' }}>{metaModal.sha256_hash}</code>
+            </div>
+            {metaModal.acl?.length > 0 && (
+              <div style={{ marginTop: 14 }}>
+                <div style={{ color: 'var(--text2)', fontSize: 12, marginBottom: 6 }}>ACCESS CONTROL LIST</div>
+                {metaModal.acl.map((a, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
+                    <code>{a.user_id.slice(0,16)}…</code>
+                    <Badge type={a.permission === 'write' ? 'amber' : 'blue'}>{a.permission}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {shareModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShareModal(null)}>
+          <div className="modal">
+            <div className="modal-title">🔗 Share File <button className="btn-secondary" style={{ padding: '2px 8px' }} onClick={() => setShareModal(null)}>✕</button></div>
+            <Alert msg="Share link created (valid 24 hours)." type="success" />
+            <div style={{ marginTop: 12 }}>
+              <div className="form-label">Share URL</div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                <input value={shareResult} readOnly style={{ fontFamily: 'monospace', fontSize: 11 }} />
+                <button className="btn-primary" style={{ whiteSpace: 'nowrap' }} onClick={() => { navigator.clipboard.writeText(shareResult); }}>Copy</button>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 8 }}>Anyone with this link can download the file (no login required) for 24 hours.</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Security Page ───────────────────────────────────────────────
+function SecurityPage() {
+  const [alerts, setAlerts] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [tab, setTab] = React.useState('open');
+
+  const load = async (resolved) => {
+    setLoading(true);
+    try { const r = await api(`/api/admin/security-alerts?resolved=${resolved}`); setAlerts(r); }
+    catch (e) {}
+    setLoading(false);
+  };
+
+  React.useEffect(() => { load(tab === 'resolved'); }, [tab]);
+
+  async function resolve(id) {
+    await api(`/api/admin/security-alerts/${id}/resolve`, { method: 'POST' });
+    load(false);
+  }
+
+  const sevColor = s => ({ critical: 'red', high: 'amber', medium: 'blue', low: 'text2' }[s] || 'blue');
+
+  return (
+    <div>
+      <div className="page-title">🛡 Security Alerts</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {['open','resolved'].map(t => (
+          <button key={t} className={tab===t ? 'btn-primary' : 'btn-secondary'} onClick={() => setTab(t)}>{t === 'open' ? '🔴 Open' : '✅ Resolved'}</button>
+        ))}
+      </div>
+      {loading ? <div style={{ textAlign: 'center', padding: 48 }}><Spinner /></div> :
+        alerts.length === 0 ? (
+          <div className="empty-state"><div className="empty-icon">✅</div><div>No {tab} alerts</div></div>
+        ) : (
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <table>
+              <thead><tr><th>Severity</th><th>Type</th><th>Detail</th><th>IP</th><th>Time</th>{tab === 'open' && <th>Action</th>}</tr></thead>
+              <tbody>
+                {alerts.map(a => (
+                  <tr key={a.id}>
+                    <td><Badge type={sevColor(a.severity)}>{a.severity}</Badge></td>
+                    <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{a.type}</td>
+                    <td style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, color: 'var(--text2)' }}>{a.detail}</td>
+                    <td style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text3)' }}>{a.source_ip}</td>
+                    <td style={{ fontSize: 12, color: 'var(--text3)' }}>{fmtDate(a.timestamp)}</td>
+                    {tab === 'open' && <td><button className="btn-success" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => resolve(a.id)}>Resolve</button></td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+    </div>
+  );
+}
+
+// ── Audit Log Page ──────────────────────────────────────────────
+function AuditPage() {
+  const [logs, setLogs] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    api('/api/admin/audit-logs?limit=100').then(setLogs).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const actionColor = a => {
+    if (a.includes('FAIL') || a.includes('LOCKED') || a.includes('MALICIOUS')) return 'red';
+    if (a.includes('DELETE')) return 'amber';
+    if (a.includes('UPLOAD') || a.includes('REGISTER')) return 'green';
+    return 'blue';
+  };
+
+  return (
+    <div>
+      <div className="page-title">📜 Audit Log <Badge type="blue">{logs.length} events</Badge></div>
+      {loading ? <div style={{ textAlign: 'center', padding: 48 }}><Spinner /></div> :
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <table>
+            <thead><tr><th>Action</th><th>Resource</th><th>User</th><th>IP</th><th>Detail</th><th>Timestamp</th></tr></thead>
+            <tbody>
+              {logs.map(l => (
+                <tr key={l.id}>
+                  <td><Badge type={actionColor(l.action)}>{l.action.replace(/_/g, ' ')}</Badge></td>
+                  <td style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12 }}>{l.resource || '—'}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text3)' }}>{l.user_id ? l.user_id.slice(0,12)+'…' : '—'}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text3)' }}>{l.ip_address || '—'}</td>
+                  <td style={{ fontSize: 12, color: 'var(--text2)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.detail || '—'}</td>
+                  <td style={{ fontSize: 11, color: 'var(--text3)' }}>{fmtDate(l.timestamp)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  );
+}
+
+// ── Users Page ──────────────────────────────────────────────────
+function UsersPage() {
+  const [users, setUsers] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    api('/api/admin/users').then(setUsers).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div>
+      <div className="page-title">👥 Users</div>
+      {loading ? <Spinner /> : (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <table>
+            <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>2FA</th><th>Status</th><th>Joined</th></tr></thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.id}>
+                  <td style={{ fontWeight: 500 }}>{u.username}</td>
+                  <td style={{ color: 'var(--text2)', fontSize: 12 }}>{u.email}</td>
+                  <td><span className={`badge tag-${u.role}`}>{u.role}</span></td>
+                  <td>{u.totp_enabled ? <Badge type="green">ON</Badge> : <span style={{ color: 'var(--text3)', fontSize: 12 }}>Off</span>}</td>
+                  <td>{u.locked_until ? <Badge type="red">Locked</Badge> : <Badge type="green">Active</Badge>}</td>
+                  <td style={{ fontSize: 12, color: 'var(--text3)' }}>{fmtDate(u.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Dashboard ───────────────────────────────────────────────────
+function Dashboard({ user }) {
+  const [stats, setStats] = React.useState(null);
+
+  React.useEffect(() => {
+    if (user.role === 'admin') api('/api/admin/stats').then(setStats).catch(() => {});
+  }, []);
+
+  return (
+    <div>
+      <div className="page-title">📊 Dashboard</div>
+      {stats && (
+        <div className="grid4">
+          {[
+            { label: 'Total Users', val: stats.total_users, icon: '👥', color: 'var(--blue)' },
+            { label: 'Stored Files', val: stats.total_files, icon: '📁', color: 'var(--green)' },
+            { label: 'Open Alerts', val: stats.open_alerts, icon: '🛡', color: stats.open_alerts > 0 ? 'var(--red)' : 'var(--green)' },
+            { label: 'Audit Events', val: stats.total_audit_events, icon: '📜', color: 'var(--amber)' },
+          ].map(s => (
+            <div key={s.label} className="stat-card">
+              <div style={{ fontSize: 24 }}>{s.icon}</div>
+              <div className="stat-val" style={{ color: s.color }}>{s.val}</div>
+              <div className="stat-label">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="two-col">
+        <div className="card">
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>🔐 Security Features</div>
+          {[
+            ['Password Hashing', 'Bcrypt with salt rounds', '✅'],
+            ['Two-Factor Auth', 'TOTP (Google Authenticator)', '✅'],
+            ['File Encryption', 'AES-256-GCM at rest', '✅'],
+            ['Integrity Check', 'SHA-256 on every read', '✅'],
+            ['Malware Scan', 'Magic bytes + pattern scan', '✅'],
+            ['Buffer Overflow', 'Size + length validation', '✅'],
+            ['Rate Limiting', 'Per-IP throttling', '✅'],
+            ['Audit Logging', 'Tamper-evident log', '✅'],
+          ].map(([title, desc, icon]) => (
+            <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 16 }}>{icon}</span>
+              <div>
+                <div style={{ fontWeight: 500, fontSize: 13 }}>{title}</div>
+                <div style={{ fontSize: 11, color: 'var(--text2)' }}>{desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="card">
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>👤 Your Account — <span className={`badge tag-${user.role}`}>{user.role}</span></div>
+          <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Logged in as <strong style={{ color: 'var(--text)' }}>{user.username}</strong></div>
+          <TwoFAPanel />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 2FA Panel ───────────────────────────────────────────────────
+function TwoFAPanel() {
+  const [me, setMe] = React.useState(null);
+  const [qr, setQr] = React.useState('');
+  const [secret, setSecret] = React.useState('');
+  const [code, setCode] = React.useState('');
+  const [msg, setMsg] = React.useState('');
+  const [err, setErr] = React.useState('');
+  const [step, setStep] = React.useState('idle'); // idle | setup | confirm | disable
+
+  React.useEffect(() => { api('/api/auth/me').then(setMe).catch(() => {}); }, []);
+
+  async function startSetup() {
+    const r = await api('/api/auth/setup-2fa', { method: 'POST' });
+    setQr(r.qr_code); setSecret(r.secret); setStep('confirm');
+  }
+
+  async function confirmSetup() {
+    try {
+      await api('/api/auth/confirm-2fa', { method: 'POST', body: JSON.stringify({ totp_code: code }) });
+      setMsg('2FA enabled!'); setStep('idle'); setMe(m => ({ ...m, totp_enabled: true }));
+    } catch (e) { setErr(e.message); }
+  }
+
+  async function disable2FA() {
+    try {
+      await api('/api/auth/disable-2fa', { method: 'POST', body: JSON.stringify({ totp_code: code }) });
+      setMsg('2FA disabled'); setStep('idle'); setMe(m => ({ ...m, totp_enabled: false })); setCode('');
+    } catch (e) { setErr(e.message); }
+  }
+
+  if (!me) return <Spinner />;
+
+  return (
+    <div>
+      {msg && <Alert msg={msg} type="success" />}
+      {err && <Alert msg={err} />}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <span style={{ fontSize: 13 }}>Two-Factor Authentication</span>
+        {me.totp_enabled ? <Badge type="green">Enabled</Badge> : <Badge type="red">Disabled</Badge>}
+      </div>
+      {step === 'idle' && !me.totp_enabled && (
+        <button className="btn-primary" onClick={startSetup}>Enable 2FA</button>
+      )}
+      {step === 'idle' && me.totp_enabled && (
+        <button className="btn-secondary" onClick={() => setStep('disable')}>Disable 2FA</button>
+      )}
+      {step === 'confirm' && (
+        <div>
+          <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10 }}>Scan with Google Authenticator:</div>
+          <img src={`data:image/png;base64,${qr}`} alt="QR" style={{ width: 160, height: 160, border: '4px solid white', borderRadius: 8, display: 'block', marginBottom: 12 }} />
+          <div style={{ fontFamily: 'monospace', fontSize: 11, background: 'var(--bg3)', padding: '6px 10px', borderRadius: 6, marginBottom: 12, wordBreak: 'break-all' }}>{secret}</div>
+          <input placeholder="Enter 6-digit code" value={code} onChange={e => setCode(e.target.value)} maxLength={6} style={{ marginBottom: 10 }} />
+          <button className="btn-primary" onClick={confirmSetup}>Confirm</button>
+        </div>
+      )}
+      {step === 'disable' && (
+        <div>
+          <input placeholder="Enter current 2FA code" value={code} onChange={e => setCode(e.target.value)} maxLength={6} style={{ marginBottom: 10 }} />
+          <button className="btn-danger" onClick={disable2FA}>Confirm Disable</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── App Shell ───────────────────────────────────────────────────
+function App() {
+  const [user, setUser] = React.useState(null);
+  const [page, setPage] = React.useState('dashboard');
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      api('/api/auth/me').then(me => setUser({ username: me.username, role: me.role })).catch(() => localStorage.removeItem('token'));
+    }
+  }, []);
+
+  function logout() { localStorage.removeItem('token'); setUser(null); }
+
+  if (!user) return <AuthPage onLogin={setUser} />;
+
+  const isAdmin = user.role === 'admin';
+
+  const navItems = [
+    { id: 'dashboard', icon: '📊', label: 'Dashboard' },
+    { id: 'files', icon: '📁', label: 'Files' },
+    ...(isAdmin ? [
+      { id: 'security', icon: '🛡', label: 'Security' },
+      { id: 'audit', icon: '📜', label: 'Audit Log' },
+      { id: 'users', icon: '👥', label: 'Users' },
+    ] : []),
+  ];
+
+  const pages = { dashboard: <Dashboard user={user} />, files: <FilesPage user={user} />, security: <SecurityPage />, audit: <AuditPage />, users: <UsersPage /> };
+
+  return (
+    <div>
+      {/* Nav */}
+      <div className="nav">
+        <div className="nav-logo">🔒 Secure<span>FMS</span></div>
+        <div className="nav-right">
+          <span className={`badge tag-${user.role}`}>{user.role}</span>
+          <span style={{ color: 'var(--text2)', fontSize: 13 }}>{user.username}</span>
+          <button className="btn-secondary" style={{ padding: '5px 12px', fontSize: 13 }} onClick={logout}>Sign Out</button>
+        </div>
+      </div>
+      {/* Sidebar */}
+      <div className="sidebar">
+        {navItems.map(item => (
+          <div key={item.id} className={`sidebar-item ${page === item.id ? 'active' : ''}`} onClick={() => setPage(item.id)}>
+            <span className="icon">{item.icon}</span> {item.label}
+          </div>
+        ))}
+        <div style={{ padding: '20px', marginTop: 'auto', borderTop: '1px solid var(--border)', position: 'absolute', bottom: 0, width: '100%' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.8 }}>
+            <div>🔒 AES-256 Encryption</div>
+            <div>🔐 TOTP Two-Factor Auth</div>
+            <div>🛡 Threat Detection Active</div>
+          </div>
+        </div>
+      </div>
+      {/* Main */}
+      <div className="main">{pages[page]}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
